@@ -147,9 +147,12 @@ then
 
     # Invoke a remote Disnix interface to fetch all the paths that 
     # are not already at the remote machine
-    invalidPaths=`$interface --target $target --print-invalid $requisites`
+    mapfile -t batches <<<$(tr '\n' ' ' <<< $requisites | fold -sw 130000)  # Prevent "argument list too long"
+    for batch in "${batches[@]}"; do
+        invalidPaths="$invalidPaths $($interface --target $target --print-invalid $batch)"
+    done
 
-    if [ "$invalidPaths" != "" ]
+    if [[ ! "$invalidPaths" =~ ^[[:space:]]*$ ]]
     then
         # Serialise all the missing parts of the closure
         tmpfilename=`mktemp -p $TMPDIR`
